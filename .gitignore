@@ -1,6 +1,5 @@
 *.pyc
 *.json
-<<<<<<< HEAD
 *.swp
 back.py
 applications/search/check_frontier.py
@@ -8,5 +7,3 @@ applications/search/reset_frontier.py
 applications/search/delete_invalids_from_frontier.py
 datamodel/search/*_datamodel.py
 soup_test.py
-=======
->>>>>>> 6a538305d291ad3ab7c47b7af0c606829bd7558b

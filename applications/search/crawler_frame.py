@@ -1,8 +1,5 @@
 import logging
-<<<<<<< HEAD
 from bs4 import BeautifulSoup
-=======
->>>>>>> 6a538305d291ad3ab7c47b7af0c606829bd7558b
 from datamodel.search.MmaranoBhtruon1_datamodel import MmaranoBhtruon1Link, OneMmaranoBhtruon1UnProcessedLink
 from spacetime.client.IApplication import IApplication
 from spacetime.client.declarations import Producer, GetterSetter, Getter
@@ -69,7 +66,6 @@ def extract_next_links(rawDataObj):
     
     Suggested library: lxml
     '''
-<<<<<<< HEAD
 
     # TODO: determine if there will be links anywhere but the content
 
@@ -80,9 +76,7 @@ def extract_next_links(rawDataObj):
     
 
     # return outputLinks
-=======
     return outputLinks
->>>>>>> 6a538305d291ad3ab7c47b7af0c606829bd7558b
 
 def is_valid(url):
     '''
@@ -91,14 +85,10 @@ def is_valid(url):
     Robot rules and duplication rules are checked separately.
     This is a great place to filter out crawler traps.
     '''
-<<<<<<< HEAD
     # Note that the frontier takes care of duplicates. 
     parsed = urlparse(url)
 
-    # Super random but set conversion here is unnecessary, list is too small for the set overhead
-=======
     parsed = urlparse(url)
->>>>>>> 6a538305d291ad3ab7c47b7af0c606829bd7558b
     if parsed.scheme not in set(["http", "https"]):
         return False
     try:
