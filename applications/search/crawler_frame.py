@@ -72,7 +72,6 @@ def extract_next_links(rawDataObj):
     soup = BeautifulSoup(rawDataObj.content, "lxml")
     link_tags = soup.find_all("a")
 
-    outputLinks = list()
     for link_tag in link_tags:
         if "href" in link_tag.attrs.keys():
             outputLinks.append(link_tag["href"])
@@ -93,6 +92,12 @@ def is_valid(url):
     parsed = urlparse(url)
     if parsed.scheme not in set(["http", "https"]):
         return False
+	if not re.match("^.*calendar.*$", parsed.path.lower()):
+		return False
+	if not re.match("^.*?(/.+?/).*?\1.*$|^.*?/(.+?/)\2.*$", parsed.path.lower()):
+		return False
+	if not re.match("^.*(/misc|/sites|/all|/themes|/modules|/profiles|/css|/field|/node|/theme){3}.*$", parsed.path.lower())
+
     try:
         return ".ics.uci.edu" in parsed.hostname \
             and not re.match(".*\.(css|js|bmp|gif|jpe?g|ico" + "|png|tiff?|mid|mp2|mp3|mp4"\
