@@ -71,9 +71,9 @@ def extract_next_links(rawDataObj):
 
     soup = BeautifulSoup(rawDataObj.content)
     links = soup.find_all("a")
-
-    return list(links)
-    
+    outputLinks = list()
+    for l in links:
+        result.append(l['href'])
 
     # return outputLinks
     return outputLinks
