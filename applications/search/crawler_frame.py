@@ -96,7 +96,8 @@ def is_valid(url):
 		return False
 	if not re.match("^.*?(/.+?/).*?\1.*$|^.*?/(.+?/)\2.*$", parsed.path.lower()):
 		return False
-	if not re.match("^.*(/misc|/sites|/all|/themes|/modules|/profiles|/css|/field|/node|/theme){3}.*$", parsed.path.lower())
+	if not re.match("^.*(/misc|/sites|/all|/themes|/modules|/profiles|/css|/field|/node|/theme){3}.*$", parsed.path.lower()):
+		return False
 
     try:
         return ".ics.uci.edu" in parsed.hostname \
