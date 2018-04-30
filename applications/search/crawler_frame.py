@@ -73,9 +73,9 @@ def extract_next_links(rawDataObj):
     link_tags = soup.find_all("a")
 
     outputLinks = list()
-    for l in link_tags:
-        if "href" in tag.attrs.keys():
-            outputLinks.append(l["href"])
+    for link_tag in link_tags:
+        if "href" in link_tag.attrs.keys():
+            outputLinks.append(link_tag["href"])
 
     # return outputLinks
     return outputLinks
