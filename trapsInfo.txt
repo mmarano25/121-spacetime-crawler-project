@@ -8,6 +8,8 @@ High numbers of "Queued" URLs from any particular host can be an indication of a
 	- Look for keywords like Calendar
 	- More info at https://support.archive-it.org/hc/en-us/articles/208332943-Identify-and-avoid-crawler-traps-
 
+
+
 Using Regular Expressions can help find traps:
 
 	- Finding the word "calendar": 			^.*calendar.*$
