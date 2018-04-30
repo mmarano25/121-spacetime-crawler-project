@@ -1,0 +1,19 @@
+How to identifiy and avoid traps:
+
+High numbers of "Queued" URLs from any particular host can be an indication of a crawler trap.
+	- URLs are long and messy
+	   - http://www.example.org/-4RKgHfoN-6E11VCLhJOgPe79POuU2ZXhnTVbnUg_Zs.eyJpbnN0YW5jZUlkIjoiMTNk
+	- URLs contain Repeat Directories and Extra Directories
+		- large numbers of repeating directories or extra.
+	- Look for keywords like Calendar
+	- More info at https://support.archive-it.org/hc/en-us/articles/208332943-Identify-and-avoid-crawler-traps-
+
+Using Regular Expressions can help find traps:
+
+	- Finding the word "calendar": 			^.*calendar.*$
+	- Repeating Directories:				^.*?(/.+?/).*?\1.*$|^.*?/(.+?/)\2.*$
+	- Commonly Used Extra Directories :     ^.*(/misc|/sites|/all|/themes|/modules|/profiles|/css|/field|/node|/theme){3}.*$
+
+
+
+
