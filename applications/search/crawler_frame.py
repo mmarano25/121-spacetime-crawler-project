@@ -7,13 +7,11 @@ from lxml import html,etree
 import re, os
 from time import time
 from uuid import uuid4
-
+import sys
 from urlparse import urlparse, parse_qs
 from uuid import uuid4
-
 logger = logging.getLogger(__name__)
 LOG_HEADER = "[CRAWLER]"
-
 @Producer(MmaranoBhtruon1Link)
 @GetterSetter(OneMmaranoBhtruon1UnProcessedLink)
 class CrawlerFrame(IApplication):
@@ -22,7 +20,6 @@ class CrawlerFrame(IApplication):
     def __init__(self, frame):
         self.app_id = "MmaranoBhtruon1"
         self.frame = frame
-
 
     def initialize(self):
         self.count = 0
@@ -56,6 +53,7 @@ class CrawlerFrame(IApplication):
     
 def extract_next_links(rawDataObj):
     outputLinks = []
+    print() 
     '''
     rawDataObj is an object of type UrlResponse declared at L20-30
     datamodel/search/server_datamodel.py
@@ -68,13 +66,16 @@ def extract_next_links(rawDataObj):
     '''
 
     # TODO: not pass links starting with #, make links absolute with lxml's libraries
+    if rawDataObj.is_redirected:
+        outputLinks.append(rawDataObj.final_url)
+#        print rawDataObj.url
+#        print rawDataObj.final_url
+       
     try:
         body = html.fromstring(rawDataObj.content)
         body = html.tostring(html.make_links_absolute(body, rawDataObj.url))
     except etree.XMLSyntaxError:
         return outputLinks
-    print(rawDataObj.url)  
-    print(rawDataObj.is_redirected)
     soup = BeautifulSoup(body, "lxml")
     link_tags = soup.find_all("a")
 
@@ -93,17 +94,19 @@ def is_valid(url):
     This is a great place to filter out crawler traps.
     '''
     # Note that the frontier takes care of duplicates. 
+    #print >> sys.stderr, url
     parsed = urlparse(url)
-
     if parsed.scheme not in set(["http", "https"]):
         return False
+    lowerPath = parsed.path.lower()
+    if len(lowerPath)/(lowerPath.count("/") + 1) > 20:
+		return False
     if re.match("^.*calendar.*$", parsed.path.lower()):
         return False
     if re.match("^.*?(\/.+?\/).*?\1.*$|^.*?\/(.+?\/)\2.*$", parsed.path.lower()):
         return False
     if re.match("^.*(/misc|/sites|/all|/themes|/modules|/profiles|/css|/field|/node|/theme){3}.*$", parsed.path.lower()):
         return False
-
     try:
         return ".ics.uci.edu" in parsed.hostname \
             and not re.match(".*\.(css|js|bmp|gif|jpe?g|ico" + "|png|tiff?|mid|mp2|mp3|mp4"\
