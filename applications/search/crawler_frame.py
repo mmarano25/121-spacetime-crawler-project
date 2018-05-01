@@ -67,13 +67,18 @@ def extract_next_links(rawDataObj):
     Suggested library: lxml
     '''
 
-    # TODO: determine if there will be links anywhere but the content
+    # TODO: not pass links starting with #
 
     soup = BeautifulSoup(rawDataObj.content, "lxml")
     link_tags = soup.find_all("a")
 
     for link_tag in link_tags:
         if "href" in link_tag.attrs.keys():
+            link = link_tag["href"]
+
+            if not link.startswith("http"):
+                link = rawDataObj.url + "/" + link
+
             outputLinks.append(link_tag["href"])
 
     # return outputLinks
