@@ -68,19 +68,21 @@ def extract_next_links(rawDataObj):
     '''
 
     # TODO: not pass links starting with #, make links absolute with lxml's libraries
-
-    soup = BeautifulSoup(rawDataObj.content, "lxml")
+    try:
+        body = html.fromstring(rawDataObj.content)
+        body = html.tostring(html.make_links_absolute(body, rawDataObj.url))
+    except etree.XMLSyntaxError:
+        return outputLinks
+    print(rawDataObj.url)  
+    print(rawDataObj.is_redirected)
+    soup = BeautifulSoup(body, "lxml")
     link_tags = soup.find_all("a")
 
     for link_tag in link_tags:
         if "href" in link_tag.attrs.keys():
             link = link_tag["href"]
 
-            if not link.startswith("http"):
-                link = rawDataObj.url + "/" + link
-
             outputLinks.append(link_tag["href"])
-
     return outputLinks
 
 def is_valid(url):
@@ -93,15 +95,14 @@ def is_valid(url):
     # Note that the frontier takes care of duplicates. 
     parsed = urlparse(url)
 
-    parsed = urlparse(url)
     if parsed.scheme not in set(["http", "https"]):
         return False
-    if not re.match("^.*calendar.*$", parsed.path.lower()):
-            return False
-    if not re.match("^.*?(/.+?/).*?\1.*$|^.*?/(.+?/)\2.*$", parsed.path.lower()):
-            return False
-    if not re.match("^.*(/misc|/sites|/all|/themes|/modules|/profiles|/css|/field|/node|/theme){3}.*$", parsed.path.lower()):
-            return False
+    if re.match("^.*calendar.*$", parsed.path.lower()):
+        return False
+    if re.match("^.*?(\/.+?\/).*?\1.*$|^.*?\/(.+?\/)\2.*$", parsed.path.lower()):
+        return False
+    if re.match("^.*(/misc|/sites|/all|/themes|/modules|/profiles|/css|/field|/node|/theme){3}.*$", parsed.path.lower()):
+        return False
 
     try:
         return ".ics.uci.edu" in parsed.hostname \
