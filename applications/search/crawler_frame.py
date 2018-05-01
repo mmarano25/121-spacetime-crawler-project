@@ -67,7 +67,7 @@ def extract_next_links(rawDataObj):
     Suggested library: lxml
     '''
 
-    # TODO: not pass links starting with #
+    # TODO: not pass links starting with #, make links absolute with lxml's libraries
 
     soup = BeautifulSoup(rawDataObj.content, "lxml")
     link_tags = soup.find_all("a")
@@ -81,7 +81,6 @@ def extract_next_links(rawDataObj):
 
             outputLinks.append(link_tag["href"])
 
-    # return outputLinks
     return outputLinks
 
 def is_valid(url):
@@ -97,12 +96,12 @@ def is_valid(url):
     parsed = urlparse(url)
     if parsed.scheme not in set(["http", "https"]):
         return False
-	if not re.match("^.*calendar.*$", parsed.path.lower()):
-		return False
-	if not re.match("^.*?(/.+?/).*?\1.*$|^.*?/(.+?/)\2.*$", parsed.path.lower()):
-		return False
-	if not re.match("^.*(/misc|/sites|/all|/themes|/modules|/profiles|/css|/field|/node|/theme){3}.*$", parsed.path.lower()):
-		return False
+    if not re.match("^.*calendar.*$", parsed.path.lower()):
+            return False
+    if not re.match("^.*?(/.+?/).*?\1.*$|^.*?/(.+?/)\2.*$", parsed.path.lower()):
+            return False
+    if not re.match("^.*(/misc|/sites|/all|/themes|/modules|/profiles|/css|/field|/node|/theme){3}.*$", parsed.path.lower()):
+            return False
 
     try:
         return ".ics.uci.edu" in parsed.hostname \
