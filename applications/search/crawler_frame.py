@@ -51,9 +51,33 @@ class CrawlerFrame(IApplication):
             "Time time spent this session: ",
             time() - self.starttime, " seconds.")
     
+# format of log_dict: (number of out links, number of times linked to)
+log_dict = dict()
+pages_raising_parse_error = set()
+
+def log_page(was_parsed, rawDataObj, outputLinks): # -> None
+    if not was_parsed:
+        pages_raising_parse_error.add(rawDataObj.url)
+        return
+
+    num_out_links = len(outputLinks)
+    url = rawDataObj.url
+
+    if url not in log_dict.keys():
+        log_dict[url] = (num_out_links, 0)
+
+    for link in outputLinks:
+        if link in log_dict.keys():
+            log_dict[link] = (log_dict[link][0], log_dict[link][1] + 1)
+        else:
+            log_dict[link] = (0, 1)
+    print log_dict
+
+
+
 def extract_next_links(rawDataObj):
     outputLinks = []
-    print() 
+    was_parsed = True
     '''
     rawDataObj is an object of type UrlResponse declared at L20-30
     datamodel/search/server_datamodel.py
@@ -65,25 +89,27 @@ def extract_next_links(rawDataObj):
     Suggested library: lxml
     '''
 
-    # TODO: not pass links starting with #, make links absolute with lxml's libraries
     if rawDataObj.is_redirected:
         outputLinks.append(rawDataObj.final_url)
-#        print rawDataObj.url
-#        print rawDataObj.final_url
        
     try:
         body = html.fromstring(rawDataObj.content)
         body = html.tostring(html.make_links_absolute(body, rawDataObj.url))
+
+        soup = BeautifulSoup(body, "lxml")
+        link_tags = soup.find_all("a")
+
+        for link_tag in link_tags:
+            if "href" in link_tag.attrs.keys():
+                link = link_tag["href"]
+                if "#" not in link and (link != rawDataObj.url): # avoid duplicates of the current page
+                    outputLinks.append(link)
+
     except etree.XMLSyntaxError:
-        return outputLinks
-    soup = BeautifulSoup(body, "lxml")
-    link_tags = soup.find_all("a")
+        was_parsed = False
 
-    for link_tag in link_tags:
-        if "href" in link_tag.attrs.keys():
-            link = link_tag["href"]
 
-            outputLinks.append(link_tag["href"])
+    log_page(was_parsed, rawDataObj, outputLinks)
     return outputLinks
 
 def is_valid(url):
