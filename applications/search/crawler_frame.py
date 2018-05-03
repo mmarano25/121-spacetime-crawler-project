@@ -1,5 +1,6 @@
 import logging
 from bs4 import BeautifulSoup
+from collections import Counter
 from datamodel.search.MmaranoBhtruon1_datamodel import MmaranoBhtruon1Link, OneMmaranoBhtruon1UnProcessedLink
 from spacetime.client.IApplication import IApplication
 from spacetime.client.declarations import Producer, GetterSetter, Getter
@@ -50,30 +51,67 @@ class CrawlerFrame(IApplication):
         print (
             "Time time spent this session: ",
             time() - self.starttime, " seconds.")
+
+
+class MyAnalyticsLogger():
+    # Logger keeps track of 4 things: 
+    #   1. Page with the highest in degree, 
+    #   2. Page with the highest out degree, 
+    #   3. Pages that couldn't be parsed, and 
+    #   4. Pages that were marked as traps
+    def __init__(self):
+        self.in_degree     = Counter()
+        self.out_degree    = Counter()
+        self.highest_in_degree_name    = ""
+        self.highest_in_degree_number  = 0
+        self.highest_out_degree_name   = ""
+        self.highest_out_degree_number = 0
+        self.error_parsing = set()
+        self.traps = set()
+
+    def log_links(self, was_parsed, rawDataObj, outputLinks):
+        url = rawDataObj.url
+
+        if not was_parsed:
+            self.error_parsing.add(url)
+
+        out_num = len(outputLinks)
+        self.out_degree[url] = out_num
+        if self.highest_out_degree_number < out_num:
+            self.highest_out_degree_name   = url
+            self.highest_out_degree_number = out_num
+
+        for link in outputLinks:
+            self.in_degree[link] += 1
+        self.highest_in_degree_name, self.highest_in_degree_number = max(self.in_degree.items(), key=lambda x: x[1]) 
+        
+        self._write_to_file()
+
+    def log_trap(self, url):
+        self.traps.add(url)
+
+    def _write_to_file(self):
+        with open("log.txt", "w") as log:
+            out_str = "Highest out degree: {}, {}\n".format(self.highest_out_degree_number, self.highest_out_degree_name)
+            in_str  = "Highest  in degree: {}, {}\n".format(self.highest_in_degree_number,  self.highest_in_degree_name)
+            log.write(out_str)
+            log.write(in_str)
+
+            in_set  = set(self.in_degree.viewkeys())
+            out_set = set(self.out_degree.viewkeys())
+            all_urls = in_set.union(out_set)
+
+            for link in all_urls:
+                body = "In: {},\tOut: {},\tURL: {}\n".format(self.in_degree[link], self.out_degree[link], link)
+                log.write(body)
+
+            log.write('\nPages that couldn\'t be parsed:\n')
+            log.write(str(self.error_parsing))
+
+            log.write('\n\nTraps:\n')
+            log.write(str(self.traps))
     
-# format of log_dict: (number of out links, number of times linked to)
-log_dict = dict()
-pages_raising_parse_error = set()
-
-def log_page(was_parsed, rawDataObj, outputLinks): # -> None
-    if not was_parsed:
-        pages_raising_parse_error.add(rawDataObj.url)
-        return
-
-    num_out_links = len(outputLinks)
-    url = rawDataObj.url
-
-    if url not in log_dict.keys():
-        log_dict[url] = (num_out_links, 0)
-
-    for link in outputLinks:
-        if link in log_dict.keys():
-            log_dict[link] = (log_dict[link][0], log_dict[link][1] + 1)
-        else:
-            log_dict[link] = (0, 1)
-    #print log_dict
-
-
+my_logger = MyAnalyticsLogger()
 
 def extract_next_links(rawDataObj):
     outputLinks = []
@@ -105,35 +143,40 @@ def extract_next_links(rawDataObj):
                 if "#" not in link and (link != rawDataObj.url): # avoid duplicates of the current page
                     outputLinks.append(link)
 
-    except:
+    except: # etree.XMLSyntaxError, etree.ParserError; changed to blanket except due to lack of understanding of possible errors in lxml
         was_parsed = False
 
 
-    log_page(was_parsed, rawDataObj, outputLinks)
+    my_logger.log_links(was_parsed, rawDataObj, outputLinks)
     return outputLinks
 
 def is_valid(url):
+    # need to refactor so we don't write my_logger.log_trap(url) everywhere
     '''
     Function returns True or False based on whether the url has to be
     downloaded or not.
     Robot rules and duplication rules are checked separately.
     This is a great place to filter out crawler traps.
     '''
-    # Note that the frontier takes care of duplicates. 
-    #print >> sys.stderr, url
     parsed = urlparse(url)
     if parsed.scheme not in set(["http", "https"]):
+        my_logger.log_trap(url)
         return False
     lowerPath = parsed.path.lower()
     if len(lowerPath)/(lowerPath.count("/") + 1) > 20:
-		return False
+        my_logger.log_trap(url)
+        return False
     if parsed.query.count("=") > 2:
+        my_logger.log_trap(url)
         return False
     if re.match("^.*calendar.*$", parsed.path.lower()):
+        my_logger.log_trap(url)
         return False
     if re.match("^.*?(\/.+?\/).*?\1.*$|^.*?\/(.+?\/)\2.*$", parsed.path.lower()):
+        my_logger.log_trap(url)
         return False
     if re.match("^.*(/misc|/sites|/all|/themes|/modules|/profiles|/css|/field|/node|/theme){3}.*$", parsed.path.lower()):
+        my_logger.log_trap(url)
         return False
     try:
         return ".ics.uci.edu" in parsed.hostname \
