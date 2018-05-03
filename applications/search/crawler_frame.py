@@ -71,7 +71,7 @@ def log_page(was_parsed, rawDataObj, outputLinks): # -> None
             log_dict[link] = (log_dict[link][0], log_dict[link][1] + 1)
         else:
             log_dict[link] = (0, 1)
-    print log_dict
+    #print log_dict
 
 
 
@@ -105,7 +105,7 @@ def extract_next_links(rawDataObj):
                 if "#" not in link and (link != rawDataObj.url): # avoid duplicates of the current page
                     outputLinks.append(link)
 
-    except etree.XMLSyntaxError:
+    except:
         was_parsed = False
 
 
@@ -127,6 +127,8 @@ def is_valid(url):
     lowerPath = parsed.path.lower()
     if len(lowerPath)/(lowerPath.count("/") + 1) > 20:
 		return False
+    if parsed.query.count("=") > 2:
+        return False
     if re.match("^.*calendar.*$", parsed.path.lower()):
         return False
     if re.match("^.*?(\/.+?\/).*?\1.*$|^.*?\/(.+?\/)\2.*$", parsed.path.lower()):
